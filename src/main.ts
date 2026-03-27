@@ -6,7 +6,9 @@
 import { Command } from 'commander';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
-import { getRegistry } from './registry.js';
+import { getRegistry, Strategy } from './registry.js';
+import { getBrowserFactory, browserSession } from './runtime.js';
+import type { IPage } from './types.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -46,12 +48,31 @@ for (const [key, cmd] of registry) {
     subCommand.option(flags, helpText);
   }
   
-  // Add action
+  // Add action with proper browser initialization
   if (cmd.func) {
     subCommand.action(async (options) => {
       try {
-        const result = await cmd.func!(null as any, options, false);
-        console.log(JSON.stringify(result, null, 2));
+        // Check if command needs browser
+        const needsBrowser = cmd.strategy !== Strategy.PUBLIC;
+        
+        if (needsBrowser) {
+          // Initialize browser and execute with page
+          const BrowserFactory = getBrowserFactory();
+          await browserSession(BrowserFactory, async (page) => {
+            // Navigate to domain first for cookie strategy
+            if (cmd.domain && cmd.strategy === Strategy.COOKIE) {
+              await page.goto(`https://${cmd.domain}`);
+            }
+            
+            // Execute the command function
+            const result = await cmd.func!(page, options, false);
+            console.log(JSON.stringify(result, null, 2));
+          });
+        } else {
+          // No browser needed (public data)
+          const result = await cmd.func!(null as unknown as IPage, options, false);
+          console.log(JSON.stringify(result, null, 2));
+        }
       } catch (error) {
         console.error('Error:', error instanceof Error ? error.message : error);
         process.exit(1);
