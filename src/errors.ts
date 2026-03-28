@@ -1,5 +1,5 @@
 /**
- * Unified error types for opencli.
+ * Unified error types for reader-cli.
  *
  * All errors thrown by the framework should extend CliError so that
  * the top-level handler in commanderAdapter.ts can render consistent,
@@ -79,7 +79,7 @@ export class TimeoutError extends CliError {
     super(
       'TIMEOUT',
       `${label} timed out after ${seconds}s`,
-      'Try again, or increase timeout with OPENCLI_BROWSER_COMMAND_TIMEOUT env var',
+      'Try again, or increase timeout with READER_CLI_BROWSER_COMMAND_TIMEOUT env var'
     );
     this.name = 'TimeoutError';
   }

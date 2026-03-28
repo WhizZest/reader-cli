@@ -447,7 +447,7 @@ export async function exploreUrl(
 
       // Step 9: Assemble result and write artifacts
       const siteName = opts.site ?? detectSiteName(metadata.url || url);
-      const targetDir = opts.outDir ?? path.join('.opencli', 'explore', siteName);
+      const targetDir = opts.outDir ?? path.join('.reader-cli', 'explore', siteName);
 
       const result = {
         site: siteName, target_url: url, final_url: metadata.url, title: metadata.title,
@@ -465,7 +465,7 @@ export async function exploreUrl(
 
 export function renderExploreSummary(result: ExploreResult): string {
   const lines = [
-    'opencli probe: OK', `Site: ${result.site}`, `URL: ${result.target_url}`,
+    'reader-cli probe: OK', `Site: ${result.site}`, `URL: ${result.target_url}`,
     `Title: ${result.title || '(none)'}`, `Strategy: ${result.top_strategy}`,
     `Endpoints: ${result.endpoint_count} total, ${result.api_endpoint_count} API`,
     `Capabilities: ${result.capabilities?.length ?? 0}`,

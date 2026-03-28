@@ -1,5 +1,5 @@
 /**
- * HTTP client for communicating with the opencli daemon.
+ * HTTP client for communicating with the reader-cli daemon.
  *
  * Provides a typed send() function that posts a Command and returns a Result.
  */
@@ -7,7 +7,7 @@
 import { DEFAULT_DAEMON_PORT } from '../constants.js';
 import type { BrowserSessionInfo } from '../types.js';
 
-const DAEMON_PORT = parseInt(process.env.OPENCLI_DAEMON_PORT ?? String(DEFAULT_DAEMON_PORT), 10);
+const DAEMON_PORT = parseInt(process.env.READER_CLI_DAEMON_PORT ?? String(DEFAULT_DAEMON_PORT), 10);
 const DAEMON_URL = `http://127.0.0.1:${DAEMON_PORT}`;
 
 let _idCounter = 0;
@@ -46,7 +46,7 @@ export async function isDaemonRunning(): Promise<boolean> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2000);
     const res = await fetch(`${DAEMON_URL}/status`, {
-      headers: { 'X-OpenCLI': '1' },
+      headers: { 'X-ReaderCLI': '1' },
       signal: controller.signal,
     });
     clearTimeout(timer);
@@ -64,7 +64,7 @@ export async function isExtensionConnected(): Promise<boolean> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2000);
     const res = await fetch(`${DAEMON_URL}/status`, {
-      headers: { 'X-OpenCLI': '1' },
+      headers: { 'X-ReaderCLI': '1' },
       signal: controller.signal,
     });
     clearTimeout(timer);
@@ -97,7 +97,7 @@ export async function sendCommand(
 
       const res = await fetch(`${DAEMON_URL}/command`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-OpenCLI': '1' },
+        headers: { 'Content-Type': 'application/json', 'X-ReaderCLI': '1' },
         body: JSON.stringify(command),
         signal: controller.signal,
       });

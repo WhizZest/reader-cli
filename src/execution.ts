@@ -7,7 +7,6 @@
  * 3. Domain pre-navigation for cookie/header strategies
  * 4. Timeout enforcement
  * 5. Lazy-loading of TS modules from manifest
- * 6. Lifecycle hooks (onBeforeExecute / onAfterExecute)
  */
 
 import { type CliCommand, type InternalCliCommand, type Arg, Strategy, getRegistry, fullName } from './registry.js';
@@ -17,7 +16,6 @@ import { executePipeline } from './pipeline/index.js';
 import { AdapterLoadError, ArgumentError, CommandExecutionError, getErrorMessage } from './errors.js';
 import { shouldUseBrowserSession } from './capabilityRouting.js';
 import { getBrowserFactory, browserSession, runWithTimeout, DEFAULT_BROWSER_COMMAND_TIMEOUT } from './runtime.js';
-import { emitHook, type HookContext } from './hooks.js';
 
 const _loadedModules = new Set<string>();
 type CommandArgs = Record<string, unknown>;
@@ -129,24 +127,14 @@ function ensureRequiredEnv(cmd: CliCommand): void {
 }
 
 export async function executeCommand(
-  cmd: CliCommand,
-  rawKwargs: CommandArgs,
-  debug: boolean = false,
+  cmd: CliCommand | InternalCliCommand,
+  rawArgs: Record<string, unknown>,
+  debug = false,
 ): Promise<unknown> {
-  let kwargs: CommandArgs;
-  try {
-    kwargs = coerceAndValidateArgs(cmd.args, rawKwargs);
-  } catch (err) {
-    if (err instanceof ArgumentError) throw err;
-    throw new ArgumentError(getErrorMessage(err));
-  }
+  const cmdArgs = 'args' in cmd ? cmd.args : undefined;
+  const kwargs = cmdArgs ? coerceAndValidateArgs(cmdArgs, rawArgs) : rawArgs;
 
-  const hookCtx: HookContext = {
-    command: fullName(cmd),
-    args: kwargs,
-    startedAt: Date.now(),
-  };
-  await emitHook('onBeforeExecute', hookCtx);
+  // Load and execute command
 
   let result: unknown;
   try {
@@ -172,13 +160,8 @@ export async function executeCommand(
       result = await runCommand(cmd, null, kwargs, debug);
     }
   } catch (err) {
-    hookCtx.error = err;
-    hookCtx.finishedAt = Date.now();
-    await emitHook('onAfterExecute', hookCtx);
     throw err;
   }
 
-  hookCtx.finishedAt = Date.now();
-  await emitHook('onAfterExecute', hookCtx, result);
   return result;
 }

@@ -1,5 +1,5 @@
 /**
- * Unified logging for opencli.
+ * Unified logging for reader-cli.
  *
  * All framework output (warnings, debug info, errors) should go through
  * this module so that verbosity levels are respected consistently.
@@ -8,11 +8,11 @@
 import chalk from 'chalk';
 
 function isVerbose(): boolean {
-  return !!process.env.OPENCLI_VERBOSE;
+  return !!process.env.READER_CLI_VERBOSE;
 }
 
 function isDebug(): boolean {
-  return !!process.env.DEBUG?.includes('opencli');
+  return !!process.env.DEBUG?.includes('reader-cli');
 }
 
 export const log = {
@@ -31,14 +31,14 @@ export const log = {
     process.stderr.write(`${chalk.red('✖')}  ${msg}\n`);
   },
 
-  /** Verbose output (only when OPENCLI_VERBOSE is set or -v flag) */
+  /** Verbose output (only when READER_CLI_VERBOSE is set or -v flag) */
   verbose(msg: string): void {
     if (isVerbose()) {
       process.stderr.write(`${chalk.dim('[verbose]')} ${msg}\n`);
     }
   },
 
-  /** Debug output (only when DEBUG includes 'opencli') */
+  /** Debug output (only when DEBUG includes 'reader-cli') */
   debug(msg: string): void {
     if (isDebug()) {
       process.stderr.write(`${chalk.dim('[debug]')} ${msg}\n`);

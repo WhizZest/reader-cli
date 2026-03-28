@@ -125,14 +125,14 @@ export function synthesizeFromExplore(
 }
 
 export function renderSynthesizeSummary(result: SynthesizeResult): string {
-  const lines = ['opencli synthesize: OK', `Site: ${result.site}`, `Source: ${result.explore_dir}`, `Candidates: ${result.candidate_count}`];
+  const lines = ['reader-cli synthesize: OK', `Site: ${result.site}`, `Source: ${result.explore_dir}`, `Candidates: ${result.candidate_count}`];
   for (const c of result.candidates ?? []) lines.push(`  • ${c.name} (${c.strategy}, ${((c.confidence ?? 0) * 100).toFixed(0)}% confidence) → ${c.path}`);
   return lines.join('\n');
 }
 
 export function resolveExploreDir(target: string): string {
   if (fs.existsSync(target)) return target;
-  const candidate = path.join('.opencli', 'explore', target);
+  const candidate = path.join('.reader-cli', 'explore', target);
   if (fs.existsSync(candidate)) return candidate;
   throw new Error(`Explore directory not found: ${target}`);
 }

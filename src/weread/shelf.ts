@@ -12,7 +12,7 @@ cli({
   ],
   columns: ['title', 'bookId'],
   func: async (page: IPage, args) => {
-    const limit = Number(args.limit);
+    const limit = Number(args.limit); // Commander will provide default value from args definition
     
     // Navigate to shelf page
     await page.goto('https://weread.qq.com/web/shelf', { waitUntil: 'load' });

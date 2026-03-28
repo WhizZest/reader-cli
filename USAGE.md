@@ -16,6 +16,8 @@ npm run build
 
 ### 3. 安装浏览器扩展
 
+**重要：reader-cli 使用独立的浏览器扩展！**
+
 1. 打开 Chrome/Edge 浏览器
 2. 访问 `chrome://extensions/`
 3. 启用"开发者模式"
@@ -30,7 +32,9 @@ npm run build
 
 ### 5. 运行命令
 
-#### 查看书架（最多 5 本书）
+**无需手动启动 daemon！reader-cli 会自动处理！**
+
+确保扩展已安装并登录后，直接运行命令即可：
 ```bash
 node dist/main.js shelf 5
 ```
@@ -75,10 +79,6 @@ node dist/main.js book <bookId>
 
 ## 故障排除
 
-### 错误："Failed to start opencli daemon"
-
-这是正常的，因为当前实现需要 daemon 支持。如需完整功能，请参考 opencli 项目文档。
-
 ### 错误："Cannot read properties of null"
 
 确保已正确安装并启用浏览器扩展，且已登录微信读书。
@@ -91,7 +91,7 @@ node dist/main.js book <bookId>
 
 ## 开发说明
 
-本项目从 opencli 分离而来，专注于微信读书平台。保持了与 opencli 相同的底层架构，但更加轻量和专注。
+本项目专注于微信读书平台，提供简洁高效的命令行工具。
 
 ## License
 

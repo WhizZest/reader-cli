@@ -28,7 +28,7 @@ export interface ExternalCliConfig {
 
 function getUserRegistryPath(): string {
   const home = os.homedir();
-  return path.join(home, '.opencli', 'external-clis.yaml');
+  return path.join(home, '.reader-cli', 'external-clis.yaml');
 }
 
 export function loadExternalClis(): ExternalCliConfig[] {

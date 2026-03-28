@@ -1,5 +1,5 @@
 /**
- * opencli micro-daemon — HTTP + WebSocket bridge between CLI and Chrome Extension.
+ * reader-cli micro-daemon — HTTP + WebSocket bridge between CLI and Chrome Extension.
  *
  * Architecture:
  *   CLI → HTTP POST /command → daemon → WebSocket → Extension
@@ -7,23 +7,23 @@
  *
  * Security (defense-in-depth against browser-based CSRF):
  *   1. Origin check — reject HTTP/WS from non chrome-extension:// origins
- *   2. Custom header — require X-OpenCLI header (browsers can't send it
+ *   2. Custom header — require X-ReaderCLI header (browsers can't send it
  *      without CORS preflight, which we deny)
  *   3. No CORS headers — responses never include Access-Control-Allow-Origin
  *   4. Body size limit — 1 MB max to prevent OOM
  *   5. WebSocket verifyClient — reject upgrade before connection is established
  *
  * Lifecycle:
- *   - Auto-spawned by opencli on first browser command
+ *   - Auto-spawned by reader-cli on first browser command
  *   - Auto-exits after 5 minutes of idle
- *   - Listens on localhost:19825
+ *   - Listens on localhost:19835
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { WebSocketServer, WebSocket, type RawData } from 'ws';
 import { DEFAULT_DAEMON_PORT } from './constants.js';
 
-const PORT = parseInt(process.env.OPENCLI_DAEMON_PORT ?? String(DEFAULT_DAEMON_PORT), 10);
+const PORT = parseInt(process.env.READER_CLI_DAEMON_PORT ?? String(DEFAULT_DAEMON_PORT), 10);
 const IDLE_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 // ─── State ───────────────────────────────────────────────────────────
@@ -105,8 +105,8 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
   // custom headers in "simple" requests, and our preflight returns no
   // Access-Control-Allow-Headers, so scripted fetch() from web pages is
   // blocked even if Origin check is somehow bypassed.
-  if (!req.headers['x-opencli']) {
-    jsonResponse(res, 403, { ok: false, error: 'Forbidden: missing X-OpenCLI header' });
+  if (!req.headers['x-readercli']) {
+    jsonResponse(res, 403, { ok: false, error: 'Forbidden: missing X-ReaderCLI header' });
     return;
   }
 
@@ -148,7 +148,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
       }
 
       if (!extensionWs || extensionWs.readyState !== WebSocket.OPEN) {
-        jsonResponse(res, 503, { id: body.id, ok: false, error: 'Extension not connected. Please install the opencli Browser Bridge extension.' });
+        jsonResponse(res, 503, { id: body.id, ok: false, error: 'Extension not connected. Please install the Reader CLI Browser Bridge extension.' });
         return;
       }
 

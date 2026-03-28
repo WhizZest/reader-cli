@@ -22,8 +22,8 @@ export function runCli(BUILTIN_CLIS: string, USER_CLIS: string): void {
   // enablePositionalOptions: prevents parent from consuming flags meant for subcommands;
   // prerequisite for passThroughOptions to forward --help/--version to external binaries
   program
-    .name('opencli')
-    .description('Make any website your CLI. Zero setup. AI-powered.')
+    .name('reader-cli')
+    .description('Command-line tools for online reading platforms.')
     .version(PKG_VERSION)
     .enablePositionalOptions();
 
@@ -56,8 +56,8 @@ export function runCli(BUILTIN_CLIS: string, USER_CLIS: string): void {
           fmt,
           columns: ['command', 'site', 'name', 'description', 'strategy', 'browser', 'args',
                      ...(isStructured ? ['columns', 'domain'] : [])],
-          title: 'opencli/list',
-          source: 'opencli list',
+          title: 'reader-cli/list',
+          source: 'reader-cli list',
         });
         return;
       }
@@ -71,7 +71,7 @@ export function runCli(BUILTIN_CLIS: string, USER_CLIS: string): void {
       }
 
       console.log();
-      console.log(chalk.bold('  opencli') + chalk.dim(' — available commands'));
+      console.log(chalk.bold('  reader-cli') + chalk.dim(' — available commands'));
       console.log();
       for (const [site, cmds] of sites) {
         console.log(chalk.bold.cyan(`  ${site}`));
@@ -229,7 +229,7 @@ export function runCli(BUILTIN_CLIS: string, USER_CLIS: string): void {
 
   program
     .command('doctor')
-    .description('Diagnose opencli browser bridge connectivity')
+    .description('Diagnose reader-cli browser bridge connectivity')
     .option('--no-live', 'Skip live browser connectivity test')
     .option('--sessions', 'Show active automation sessions', false)
     .action(async (opts) => {
@@ -246,170 +246,10 @@ export function runCli(BUILTIN_CLIS: string, USER_CLIS: string): void {
       printCompletionScript(shell);
     });
 
-  // ── Plugin management ──────────────────────────────────────────────────────
-
-  const pluginCmd = program.command('plugin').description('Manage opencli plugins');
-
-  pluginCmd
-    .command('install')
-    .description('Install a plugin from GitHub')
-    .argument('<source>', 'Plugin source (e.g. github:user/repo)')
-    .action(async (source: string) => {
-      const { installPlugin } = await import('./plugin.js');
-      const { discoverPlugins } = await import('./discovery.js');
-      try {
-        const result = installPlugin(source);
-        await discoverPlugins();
-        if (Array.isArray(result)) {
-          if (result.length === 0) {
-            console.log(chalk.yellow('No plugins were installed (all skipped or incompatible).'));
-          } else {
-            console.log(chalk.green(`\u2705 Installed ${result.length} plugin(s) from monorepo: ${result.join(', ')}`));
-          }
-        } else {
-          console.log(chalk.green(`\u2705 Plugin "${result}" installed successfully. Commands are ready to use.`));
-        }
-      } catch (err) {
-        console.error(chalk.red(`Error: ${getErrorMessage(err)}`));
-        process.exitCode = 1;
-      }
-    });
-
-  pluginCmd
-    .command('uninstall')
-    .description('Uninstall a plugin')
-    .argument('<name>', 'Plugin name')
-    .action(async (name: string) => {
-      const { uninstallPlugin } = await import('./plugin.js');
-      try {
-        uninstallPlugin(name);
-        console.log(chalk.green(`✅ Plugin "${name}" uninstalled.`));
-      } catch (err) {
-        console.error(chalk.red(`Error: ${getErrorMessage(err)}`));
-        process.exitCode = 1;
-      }
-    });
-
-  pluginCmd
-    .command('update')
-    .description('Update a plugin (or all plugins) to the latest version')
-    .argument('[name]', 'Plugin name (required unless --all is passed)')
-    .option('--all', 'Update all installed plugins')
-    .action(async (name: string | undefined, opts: { all?: boolean }) => {
-      if (!name && !opts.all) {
-        console.error(chalk.red('Error: Please specify a plugin name or use the --all flag.'));
-        process.exitCode = 1;
-        return;
-      }
-      if (name && opts.all) {
-        console.error(chalk.red('Error: Cannot specify both a plugin name and --all.'));
-        process.exitCode = 1;
-        return;
-      }
-
-      const { updatePlugin, updateAllPlugins } = await import('./plugin.js');
-      const { discoverPlugins } = await import('./discovery.js');
-      if (opts.all) {
-        const results = updateAllPlugins();
-        if (results.length > 0) {
-          await discoverPlugins();
-        }
-
-        let hasErrors = false;
-        console.log(chalk.bold('  Update Results:'));
-        for (const result of results) {
-          if (result.success) {
-            console.log(`  ${chalk.green('✓')} ${result.name}`);
-            continue;
-          }
-          hasErrors = true;
-          console.log(`  ${chalk.red('✗')} ${result.name} — ${chalk.dim(result.error)}`);
-        }
-
-        if (results.length === 0) {
-          console.log(chalk.dim('  No plugins installed.'));
-          return;
-        }
-
-        console.log();
-        if (hasErrors) {
-          console.error(chalk.red('Completed with some errors.'));
-          process.exitCode = 1;
-        } else {
-          console.log(chalk.green('✅ All plugins updated successfully.'));
-        }
-        return;
-      }
-
-      try {
-        updatePlugin(name!);
-        await discoverPlugins();
-        console.log(chalk.green(`✅ Plugin "${name}" updated successfully.`));
-      } catch (err) {
-        console.error(chalk.red(`Error: ${getErrorMessage(err)}`));
-        process.exitCode = 1;
-      }
-    });
-
-
-  pluginCmd
-    .command('list')
-    .description('List installed plugins')
-    .option('-f, --format <fmt>', 'Output format: table, json', 'table')
-    .action(async (opts) => {
-      const { listPlugins } = await import('./plugin.js');
-      const plugins = listPlugins();
-      if (plugins.length === 0) {
-        console.log(chalk.dim('  No plugins installed.'));
-        console.log(chalk.dim(`  Install one with: opencli plugin install github:user/repo`));
-        return;
-      }
-      if (opts.format === 'json') {
-        renderOutput(plugins, {
-          fmt: 'json',
-          columns: ['name', 'commands', 'source'],
-          title: 'opencli/plugins',
-          source: 'opencli plugin list',
-        });
-        return;
-      }
-      console.log();
-      console.log(chalk.bold('  Installed plugins'));
-      console.log();
-
-      // Group by monorepo
-      const standalone = plugins.filter((p) => !p.monorepoName);
-      const monoGroups = new Map<string, typeof plugins>();
-      for (const p of plugins) {
-        if (!p.monorepoName) continue;
-        const g = monoGroups.get(p.monorepoName) ?? [];
-        g.push(p);
-        monoGroups.set(p.monorepoName, g);
-      }
-
-      for (const p of standalone) {
-        const version = p.version ? chalk.green(` @${p.version}`) : '';
-        const desc = p.description ? chalk.dim(` — ${p.description}`) : '';
-        const cmds = p.commands.length > 0 ? chalk.dim(` (${p.commands.join(', ')})`) : '';
-        const src = p.source ? chalk.dim(` ← ${p.source}`) : '';
-        console.log(`  ${chalk.cyan(p.name)}${version}${desc}${cmds}${src}`);
-      }
-
-      for (const [mono, group] of monoGroups) {
-        console.log();
-        console.log(chalk.bold.magenta(`  📦 ${mono}`) + chalk.dim(' (monorepo)'));
-        for (const p of group) {
-          const version = p.version ? chalk.green(` @${p.version}`) : '';
-          const desc = p.description ? chalk.dim(` — ${p.description}`) : '';
-          const cmds = p.commands.length > 0 ? chalk.dim(` (${p.commands.join(', ')})`) : '';
-          console.log(`    ${chalk.cyan(p.name)}${version}${desc}${cmds}`);
-        }
-      }
-
-      console.log();
-      console.log(chalk.dim(`  ${plugins.length} plugin(s) installed`));
-      console.log();
-    });
+  // ── Plugin management removed for security and focus ─────────────────────
+  // reader-cli is a focused tool for specific reading platforms.
+  // Plugin system is intentionally not supported to maintain low profile.
+  // ──────────────────────────────────────────────────────────────────────────
 
   // ── External CLIs ─────────────────────────────────────────────────────────
 
@@ -486,13 +326,13 @@ export function runCli(BUILTIN_CLIS: string, USER_CLIS: string): void {
 
   // ── Unknown command fallback ──────────────────────────────────────────────
   // Security: do NOT auto-discover and register arbitrary system binaries.
-  // Only explicitly registered external CLIs (via `opencli register`) are allowed.
+  // Only explicitly registered external CLIs are allowed.
 
   program.on('command:*', (operands: string[]) => {
     const binary = operands[0];
     console.error(chalk.red(`error: unknown command '${binary}'`));
     if (isBinaryInstalled(binary)) {
-      console.error(chalk.dim(`  Tip: '${binary}' exists on your PATH. Use 'opencli register ${binary}' to add it as an external CLI.`));
+      console.error(chalk.dim(`  Tip: '${binary}' exists on your PATH.`));
     }
     program.outputHelp();
     process.exitCode = 1;

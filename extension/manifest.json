@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "OpenCLI",
-  "version": "1.4.1",
-  "description": "Browser automation bridge for the OpenCLI CLI tool. Executes commands in isolated Chrome windows via a local daemon.",
+  "name": "Reader CLI",
+  "version": "1.0.0",
+  "description": "Browser automation bridge for the Reader CLI tool. Executes commands in isolated Chrome windows via a local daemon.",
   "permissions": [
     "debugger",
     "tabs",
@@ -24,7 +24,7 @@
     "128": "icons/icon-128.png"
   },
   "action": {
-    "default_title": "OpenCLI",
+    "default_title": "Reader CLI",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
@@ -34,5 +34,5 @@
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
-  "homepage_url": "https://github.com/jackwener/opencli"
+  "homepage_url": "https://github.com/WhizZest/reader-cli"
 }

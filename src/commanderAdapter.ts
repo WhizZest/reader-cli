@@ -81,7 +81,7 @@ export function registerCommandToProgram(siteCmd: Command, cmd: CliCommand): voi
 
       const verbose = optionsRecord.verbose === true;
       const format = typeof optionsRecord.format === 'string' ? optionsRecord.format : 'table';
-      if (verbose) process.env.OPENCLI_VERBOSE = '1';
+      if (verbose) process.env.READER_CLI_VERBOSE = '1';
       if (cmd.deprecated) {
         const message = typeof cmd.deprecated === 'string' ? cmd.deprecated : `${fullName(cmd)} is deprecated.`;
         const replacement = cmd.replacedBy ? ` Use ${cmd.replacedBy} instead.` : '';

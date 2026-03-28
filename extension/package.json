@@ -1,6 +1,6 @@
 {
-  "name": "opencli-extension",
-  "version": "1.4.1",
+  "name": "reader-cli-extension",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {

@@ -1,5 +1,5 @@
 /**
- * opencli doctor — diagnose and fix browser connectivity.
+ * reader-cli doctor — diagnose and fix browser connectivity.
  *
  * Simplified for the daemon-based architecture. No more token management,
  * MCP path discovery, or config file scanning.
@@ -80,12 +80,12 @@ export async function runBrowserDoctor(opts: DoctorOptions = {}): Promise<Doctor
 
   const issues: string[] = [];
   if (!status.running) {
-    issues.push('Daemon is not running. It should start automatically when you run an opencli browser command.');
+    issues.push('Daemon is not running. It should start automatically when you run an reader-cli browser command.');
   }
   if (status.running && !status.extensionConnected) {
     issues.push(
       'Daemon is running but the Chrome extension is not connected.\n' +
-      'Please install the opencli Browser Bridge extension:\n' +
+      'Please install the reader-cli Browser Bridge extension:\n' +
       '  1. Download from GitHub Releases\n' +
       '  2. Open chrome://extensions/ → Enable Developer Mode\n' +
       '  3. Click "Load unpacked" → select the extension folder',
@@ -106,7 +106,7 @@ export async function runBrowserDoctor(opts: DoctorOptions = {}): Promise<Doctor
 }
 
 export function renderBrowserDoctorReport(report: DoctorReport): string {
-  const lines = [chalk.bold(`opencli v${report.cliVersion ?? 'unknown'} doctor`) + chalk.dim(` (${getRuntimeLabel()})`), ''];
+  const lines = [chalk.bold(`reader-cli v${report.cliVersion ?? 'unknown'} doctor`) + chalk.dim(` (${getRuntimeLabel()})`), ''];
 
   // Daemon status
   const daemonIcon = report.daemonRunning ? chalk.green('[OK]') : chalk.red('[MISSING]');

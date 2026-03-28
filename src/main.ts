@@ -45,13 +45,42 @@ for (const [key, cmd] of registry) {
   for (const arg of cmd.args || []) {
     const flags = arg.required ? `<${arg.name}>` : `[${arg.name}]`;
     const helpText = arg.help || '';
-    subCommand.option(flags, helpText);
+    
+    // Check if it's a positional or option argument
+    if (arg.positional) {
+      // Positional argument
+      subCommand.argument(flags, helpText);
+    } else {
+      // Option argument with --flag
+      const optionFlag = `--${arg.name}`;
+      // Pass default value to commander for proper handling
+      if (arg.default != null) {
+        subCommand.option(`${optionFlag} ${flags}`, helpText, String(arg.default));
+      } else {
+        subCommand.option(`${optionFlag} ${flags}`, helpText);
+      }
+    }
   }
   
   // Add action with proper browser initialization
   if (cmd.func) {
-    subCommand.action(async (options) => {
+    subCommand.action(async (...actionArgs) => {
       try {
+        // Commander passes positional args as separate arguments before the options object
+        // The second-to-last argument is the options object (last is the Command instance)
+        const optionsObj = actionArgs[actionArgs.length - 2];
+        const options = typeof optionsObj === 'object' && optionsObj !== null && !(optionsObj instanceof Command) ? optionsObj : {};
+        
+        // Collect positional args (all arguments except the last two: options and Command instance)
+        const positionalArgs = actionArgs.slice(0, -2);
+        
+        // Map positional args to their names
+        cmd.args?.forEach((arg, index) => {
+          if (arg.positional && positionalArgs[index] !== undefined) {
+            options[arg.name] = positionalArgs[index];
+          }
+        });
+        
         // Check if command needs browser
         const needsBrowser = cmd.strategy !== Strategy.PUBLIC;
         

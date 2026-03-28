@@ -1,5 +1,5 @@
 /**
- * Shell tab-completion support for opencli.
+ * Shell tab-completion support for reader-cli.
  *
  * Provides:
  *  - Shell script generators for bash, zsh, and fish
@@ -31,7 +31,7 @@ const BUILTIN_COMMANDS = [
 /**
  * Return completion candidates given the current command-line words and cursor index.
  *
- * @param words  - The argv after 'opencli' (words[0] is the first arg, e.g. site name)
+ * @param words  - The argv after 'reader-cli' (words[0] is the first arg, e.g. site name)
  * @param cursor - 1-based position of the word being completed (1 = first arg)
  */
 export function getCompletions(words: string[], cursor: number): string[] {
@@ -69,42 +69,42 @@ export function getCompletions(words: string[], cursor: number): string[] {
 // ── Shell script generators ────────────────────────────────────────────────
 
 export function bashCompletionScript(): string {
-  return `# Bash completion for opencli
-# Add to ~/.bashrc:  eval "$(opencli completion bash)"
-_opencli_completions() {
+  return `# Bash completion for reader-cli
+# Add to ~/.bashrc:  eval "$(reader-cli completion bash)"
+_reader_cli_completions() {
   local cur words cword
   _get_comp_words_by_ref -n : cur words cword
 
   local completions
-  completions=$(opencli --get-completions --cursor "$cword" "\${words[@]:1}" 2>/dev/null)
+  completions=$(reader-cli --get-completions --cursor "$cword" "\${words[@]:1}" 2>/dev/null)
 
   COMPREPLY=( $(compgen -W "$completions" -- "$cur") )
   __ltrim_colon_completions "$cur"
 }
-complete -F _opencli_completions opencli
+complete -F _reader_cli_completions reader-cli
 `;
 }
 
 export function zshCompletionScript(): string {
-  return `# Zsh completion for opencli
-# Add to ~/.zshrc:  eval "$(opencli completion zsh)"
-_opencli() {
+  return `# Zsh completion for reader-cli
+# Add to ~/.zshrc:  eval "$(reader-cli completion zsh)"
+_reader_cli() {
   local -a completions
   local cword=$((CURRENT - 1))
-  completions=(\${(f)"$(opencli --get-completions --cursor "$cword" "\${words[@]:1}" 2>/dev/null)"})
+  completions=(\${(f)"$(reader-cli --get-completions --cursor "$cword" "\${words[@]:1}" 2>/dev/null)"})
   compadd -a completions
 }
-compdef _opencli opencli
+compdef _reader_cli reader-cli
 `;
 }
 
 export function fishCompletionScript(): string {
-  return `# Fish completion for opencli
-# Add to ~/.config/fish/config.fish:  opencli completion fish | source
-complete -c opencli -f -a '(
+  return `# Fish completion for reader-cli
+# Add to ~/.config/fish/config.fish:  reader-cli completion fish | source
+complete -c reader-cli -f -a '(
   set -l tokens (commandline -cop)
   set -l cursor (count (commandline -cop))
-  opencli --get-completions --cursor $cursor $tokens[2..] 2>/dev/null
+  reader-cli --get-completions --cursor $cursor $tokens[2..] 2>/dev/null
 )'
 `;
 }

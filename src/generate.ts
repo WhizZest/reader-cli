@@ -135,7 +135,7 @@ export async function generateCliFromUrl(opts: GenerateCliOptions): Promise<Gene
 
 export function renderGenerateSummary(r: GenerateCliResult): string {
   const lines = [
-    `opencli generate: ${r.ok ? 'OK' : 'FAIL'}`,
+    `reader-cli generate: ${r.ok ? 'OK' : 'FAIL'}`,
     `Site: ${r.site}`,
     `Goal: ${r.goal ?? '(auto)'}`,
     `Selected: ${r.selected_command}`,

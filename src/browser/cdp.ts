@@ -56,8 +56,8 @@ export class CDPBridge {
   async connect(opts?: { timeout?: number; workspace?: string }): Promise<IPage> {
     if (this._ws) throw new Error('CDPBridge is already connected. Call close() before reconnecting.');
 
-    const endpoint = process.env.OPENCLI_CDP_ENDPOINT;
-    if (!endpoint) throw new Error('OPENCLI_CDP_ENDPOINT is not set');
+    const endpoint = process.env.READER_CLI_CDP_ENDPOINT;
+    if (!endpoint) throw new Error('READER_CLI_CDP_ENDPOINT is not set');
 
     let wsUrl = endpoint;
     if (endpoint.startsWith('http')) {
@@ -336,7 +336,7 @@ function matchesCookieDomain(cookieDomain: string, targetDomain: string): boolea
 }
 
 function selectCDPTarget(targets: CDPTarget[]): CDPTarget | undefined {
-  const preferredPattern = compilePreferredPattern(process.env.OPENCLI_CDP_TARGET);
+  const preferredPattern = compilePreferredPattern(process.env.READER_CLI_CDP_TARGET);
 
   const ranked = targets
     .map((target, index) => ({ target, index, score: scoreCDPTarget(target, preferredPattern) }))

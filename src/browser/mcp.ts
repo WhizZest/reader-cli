@@ -64,7 +64,7 @@ export class BrowserBridge {
     if (await isDaemonRunning()) {
       throw new Error(
         'Daemon is running but the Browser Extension is not connected.\n' +
-        'Please install and enable the opencli Browser Bridge extension in Chrome.',
+        'Please install and enable the reader-cli Browser Bridge extension in Chrome.',
       );
     }
 
@@ -78,8 +78,8 @@ export class BrowserBridge {
     const isTs = fs.existsSync(daemonTs);
     const daemonPath = isTs ? daemonTs : daemonJs;
 
-    if (process.env.OPENCLI_VERBOSE) {
-      console.error(`[opencli] Starting daemon (${isTs ? 'ts' : 'js'})...`);
+    if (process.env.READER_CLI_VERBOSE) {
+      console.error(`[reader-cli] Starting daemon (${isTs ? 'ts' : 'js'})...`);
     }
 
     // For compiled .js, use the current node binary directly (fast).
@@ -106,12 +106,12 @@ export class BrowserBridge {
     if (await isDaemonRunning()) {
       throw new Error(
         'Daemon is running but the Browser Extension is not connected.\n' +
-        'Please install and enable the opencli Browser Bridge extension in Chrome.',
+        'Please install and enable the reader-cli Browser Bridge extension in Chrome.',
       );
     }
 
     throw new Error(
-      'Failed to start opencli daemon. Try running manually:\n' +
+      'Failed to start reader-cli daemon. Try running manually:\n' +
       `  node ${daemonPath}\n` +
       `Make sure port ${DEFAULT_DAEMON_PORT} is available.`,
     );

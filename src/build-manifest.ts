@@ -357,7 +357,7 @@ function main(): void {
   // Restore executable permissions on bin entries.
   // tsc does not preserve the +x bit, so after a clean rebuild the CLI
   // entry-point loses its executable permission, causing "Permission denied".
-  // See: https://github.com/jackwener/opencli/issues/446
+  // See: https://github.com/WhizZest/reader-cli/issues/446
   if (process.platform !== 'win32') {
     const pkgPath = path.resolve(__dirname, '..', 'package.json');
     try {

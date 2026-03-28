@@ -18,8 +18,8 @@ import { getErrorMessage } from './errors.js';
 import { log } from './logger.js';
 import type { ManifestEntry } from './build-manifest.js';
 
-/** Plugins directory: ~/.opencli/plugins/ */
-export const PLUGINS_DIR = path.join(os.homedir(), '.opencli', 'plugins');
+/** Plugins directory: ~/.reader-cli/plugins/ */
+export const PLUGINS_DIR = path.join(os.homedir(), '.reader-cli', 'plugins');
 /** Matches files that register commands via cli() or lifecycle hooks */
 const PLUGIN_MODULE_PATTERN = /\b(?:cli|onStartup|onBeforeExecute|onAfterExecute)\s*\(/;
 
@@ -201,7 +201,7 @@ async function registerYamlCli(filePath: string, defaultSite: string): Promise<v
 }
 
 /**
- * Discover and register plugins from ~/.opencli/plugins/.
+ * Discover and register plugins from ~/.reader-cli/plugins/.
  * Each subdirectory is treated as a plugin (site = directory name).
  * Files inside are scanned flat (no nested site subdirs).
  */

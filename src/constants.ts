@@ -3,7 +3,7 @@
  */
 
 /** Default daemon port for HTTP/WebSocket communication with browser extension */
-export const DEFAULT_DAEMON_PORT = 19825;
+export const DEFAULT_DAEMON_PORT = 19835;
 
 /** URL query params that are volatile/ephemeral and should be stripped from patterns */
 export const VOLATILE_PARAMS = new Set([

@@ -1,7 +1,7 @@
 /**
- * OpenCLI — Service Worker (background script).
+ * Reader CLI — Service Worker (background script).
  *
- * Connects to the opencli daemon via WebSocket, receives commands,
+ * Connects to the reader-cli daemon via WebSocket, receives commands,
  * dispatches them to Chrome APIs (debugger/tabs/cookies), returns results.
  */
 
@@ -45,7 +45,7 @@ function connect(): void {
   }
 
   ws.onopen = () => {
-    console.log('[opencli] Connected to daemon');
+    console.log('[reader-cli] Connected to daemon');
     reconnectAttempts = 0; // Reset on successful connection
     if (reconnectTimer) {
       clearTimeout(reconnectTimer);
@@ -59,12 +59,12 @@ function connect(): void {
       const result = await handleCommand(command);
       ws?.send(JSON.stringify(result));
     } catch (err) {
-      console.error('[opencli] Message handling error:', err);
+      console.error('[reader-cli] Message handling error:', err);
     }
   };
 
   ws.onclose = () => {
-    console.log('[opencli] Disconnected from daemon');
+    console.log('[reader-cli] Disconnected from daemon');
     ws = null;
     scheduleReconnect();
   };
@@ -93,7 +93,7 @@ function scheduleReconnect(): void {
 }
 
 // ─── Automation window isolation ─────────────────────────────────────
-// All opencli operations happen in a dedicated Chrome window so the
+// All reader-cli operations happen in a dedicated Chrome window so the
 // user's active browsing session is never touched.
 // The window auto-closes after 120s of idle (no commands).
 
@@ -120,7 +120,7 @@ function resetWindowIdleTimer(workspace: string): void {
     if (!current) return;
     try {
       await chrome.windows.remove(current.windowId);
-      console.log(`[opencli] Automation window ${current.windowId} (${workspace}) closed (idle timeout)`);
+      console.log(`[reader-cli] Automation window ${current.windowId} (${workspace}) closed (idle timeout)`);
     } catch {
       // Already gone
     }
@@ -157,7 +157,7 @@ async function getAutomationWindow(workspace: string): Promise<number> {
     idleDeadlineAt: Date.now() + WINDOW_IDLE_TIMEOUT,
   };
   automationSessions.set(workspace, session);
-  console.log(`[opencli] Created automation window ${session.windowId} (${workspace})`);
+  console.log(`[reader-cli] Created automation window ${session.windowId} (${workspace})`);
   resetWindowIdleTimer(workspace);
   // Brief delay to let Chrome load the initial data: URI tab
   await new Promise(resolve => setTimeout(resolve, 200));
@@ -168,7 +168,7 @@ async function getAutomationWindow(workspace: string): Promise<number> {
 chrome.windows.onRemoved.addListener((windowId) => {
   for (const [workspace, session] of automationSessions.entries()) {
     if (session.windowId === windowId) {
-      console.log(`[opencli] Automation window closed (${workspace})`);
+      console.log(`[reader-cli] Automation window closed (${workspace})`);
       if (session.idleTimer) clearTimeout(session.idleTimer);
       automationSessions.delete(workspace);
     }
@@ -185,7 +185,7 @@ function initialize(): void {
   chrome.alarms.create('keepalive', { periodInMinutes: 0.4 }); // ~24 seconds
   executor.registerListeners();
   connect();
-  console.log('[opencli] OpenCLI extension initialized');
+  console.log('[reader-cli] Reader CLI extension initialized');
 }
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -296,14 +296,14 @@ async function resolveTabId(tabId: number | undefined, workspace: string): Promi
       const session = automationSessions.get(workspace);
       if (isDebuggableUrl(tab.url) && session && tab.windowId === session.windowId) return tabId;
       if (session && tab.windowId !== session.windowId) {
-        console.warn(`[opencli] Tab ${tabId} belongs to window ${tab.windowId}, not automation window ${session.windowId}, re-resolving`);
+        console.warn(`[reader-cli] Tab ${tabId} belongs to window ${tab.windowId}, not automation window ${session.windowId}, re-resolving`);
       } else if (!isDebuggableUrl(tab.url)) {
         // Tab exists but URL is not debuggable — fall through to auto-resolve
-        console.warn(`[opencli] Tab ${tabId} URL is not debuggable (${tab.url}), re-resolving`);
+        console.warn(`[reader-cli] Tab ${tabId} URL is not debuggable (${tab.url}), re-resolving`);
       }
     } catch {
       // Tab was closed — fall through to auto-resolve
-      console.warn(`[opencli] Tab ${tabId} no longer exists, re-resolving`);
+      console.warn(`[reader-cli] Tab ${tabId} no longer exists, re-resolving`);
     }
   }
 
@@ -324,7 +324,7 @@ async function resolveTabId(tabId: number | undefined, workspace: string): Promi
     try {
       const updated = await chrome.tabs.get(reuseTab.id);
       if (isDebuggableUrl(updated.url)) return reuseTab.id;
-      console.warn(`[opencli] data: URI was intercepted (${updated.url}), creating fresh tab`);
+      console.warn(`[reader-cli] data: URI was intercepted (${updated.url}), creating fresh tab`);
     } catch {
       // Tab was closed during navigation
     }
@@ -436,7 +436,7 @@ async function handleNavigate(cmd: Command, workspace: string): Promise<Result> 
     // Timeout fallback with warning
     timeoutTimer = setTimeout(() => {
       timedOut = true;
-      console.warn(`[opencli] Navigate to ${targetUrl} timed out after 15s`);
+      console.warn(`[reader-cli] Navigate to ${targetUrl} timed out after 15s`);
       finish();
     }, 15000);
   });

@@ -1,7 +1,7 @@
 /**
  * DOM Snapshot Engine — Advanced DOM pruning for LLM consumption.
  *
- * Inspired by browser-use's multi-layer pruning pipeline, adapted for opencli's
+ * Inspired by browser-use's multi-layer pruning pipeline, adapted for reader-cli's
  * Chrome Extension + CDP architecture. Runs entirely in-page via Runtime.evaluate.
  *
  * Pipeline:

@@ -4,10 +4,10 @@ import { TimeoutError } from './errors.js';
 
 /**
  * Returns the appropriate browser factory based on environment config.
- * Uses CDPBridge when OPENCLI_CDP_ENDPOINT is set, otherwise BrowserBridge.
+ * Uses CDPBridge when READER_CLI_CDP_ENDPOINT is set, otherwise BrowserBridge.
  */
 export function getBrowserFactory(): new () => IBrowserFactory {
-  return (process.env.OPENCLI_CDP_ENDPOINT ? CDPBridge : BrowserBridge) as unknown as new () => IBrowserFactory;
+  return (process.env.READER_CLI_CDP_ENDPOINT ? CDPBridge : BrowserBridge) as unknown as new () => IBrowserFactory;
 }
 
 function parseEnvTimeout(envVar: string, fallback: number): number {
@@ -21,9 +21,9 @@ function parseEnvTimeout(envVar: string, fallback: number): number {
   return parsed;
 }
 
-export const DEFAULT_BROWSER_CONNECT_TIMEOUT = parseEnvTimeout('OPENCLI_BROWSER_CONNECT_TIMEOUT', 30);
-export const DEFAULT_BROWSER_COMMAND_TIMEOUT = parseEnvTimeout('OPENCLI_BROWSER_COMMAND_TIMEOUT', 60);
-export const DEFAULT_BROWSER_EXPLORE_TIMEOUT = parseEnvTimeout('OPENCLI_BROWSER_EXPLORE_TIMEOUT', 120);
+export const DEFAULT_BROWSER_CONNECT_TIMEOUT = parseEnvTimeout('READER_CLI_BROWSER_CONNECT_TIMEOUT', 30);
+export const DEFAULT_BROWSER_COMMAND_TIMEOUT = parseEnvTimeout('READER_CLI_BROWSER_COMMAND_TIMEOUT', 60);
+export const DEFAULT_BROWSER_EXPLORE_TIMEOUT = parseEnvTimeout('READER_CLI_BROWSER_EXPLORE_TIMEOUT', 120);
 
 /**
  * Timeout with seconds unit. Used for high-level command timeouts.

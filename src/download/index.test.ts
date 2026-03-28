@@ -52,7 +52,7 @@ describe('download helpers', { retry: process.platform === 'win32' ? 2 : 0 }, ()
       res.end();
     });
 
-    const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'opencli-dl-'));
+    const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'reader-cli-dl-'));
     tempDirs.push(tempDir);
     const destPath = path.join(tempDir, 'file.txt');
     const result = await httpDownload(`${baseUrl}/loop`, destPath, { maxRedirects: 2 });
@@ -79,7 +79,7 @@ describe('download helpers', { retry: process.platform === 'win32' ? 2 : 0 }, ()
       res.end();
     });
 
-    const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'opencli-dl-'));
+    const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'reader-cli-dl-'));
     tempDirs.push(tempDir);
     const destPath = path.join(tempDir, 'redirect.txt');
     const result = await httpDownload(`${redirectUrl}/start`, destPath, { cookies: 'sid=abc' });
@@ -103,7 +103,7 @@ describe('download helpers', { retry: process.platform === 'win32' ? 2 : 0 }, ()
       res.end();
     });
 
-    const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'opencli-dl-'));
+    const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'reader-cli-dl-'));
     tempDirs.push(tempDir);
     const destPath = path.join(tempDir, 'redirect-header.txt');
     const result = await httpDownload(`${redirectUrl}/start`, destPath, {

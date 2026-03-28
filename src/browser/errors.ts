@@ -14,7 +14,7 @@ export function formatBrowserConnectError(kind: ConnectFailureKind, detail?: str
   switch (kind) {
     case 'daemon-not-running':
       return new BrowserConnectError(
-        'Cannot connect to opencli daemon.' +
+        'Cannot connect to reader-cli daemon.' +
         (detail ? `\n\n${detail}` : ''),
         'The daemon should start automatically. If it doesn\'t, try:\n' +
         '  node dist/daemon.js\n' +
@@ -22,7 +22,7 @@ export function formatBrowserConnectError(kind: ConnectFailureKind, detail?: str
       );
     case 'extension-not-connected':
       return new BrowserConnectError(
-        'opencli Browser Bridge extension is not connected.' +
+        'reader-cli Browser Bridge extension is not connected.' +
         (detail ? `\n\n${detail}` : ''),
         'Please install the extension:\n' +
         '  1. Download from GitHub Releases\n' +

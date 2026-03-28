@@ -91,7 +91,7 @@ function validateYamlFile(filePath: string): FileValidationResult {
 }
 
 export function renderValidationReport(report: ValidationReport): string {
-  const lines = [`opencli validate: ${report.ok ? 'PASS' : 'FAIL'}`, `Checked ${report.results.length} CLI(s) in ${report.files} file(s)`, `Errors: ${report.errors}  Warnings: ${report.warnings}`];
+  const lines = [`reader-cli validate: ${report.ok ? 'PASS' : 'FAIL'}`, `Checked ${report.results.length} CLI(s) in ${report.files} file(s)`, `Errors: ${report.errors}  Warnings: ${report.warnings}`];
   for (const r of report.results) {
     if (r.errors.length > 0 || r.warnings.length > 0) {
       lines.push(`\n${r.path}:`);
