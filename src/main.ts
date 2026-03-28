@@ -29,6 +29,7 @@ await import('./weread/ranking.js');
 await import('./weread/notes.js');
 await import('./weread/highlights.js');
 await import('./weread/notebooks.js');
+await import('./weread/catalog.js');
 
 // Register all commands from registry to commander
 const registry = getRegistry();
