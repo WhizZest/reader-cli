@@ -72,7 +72,10 @@ cli({
     // Extract books from archive page (called after clicking the archive)
     const extractArchiveBooks = async (archiveName: string): Promise<ShelfBook[]> => {
       if (verbose) console.log(`  Extracting books from archive: ${archiveName}`);
-      await page.wait(1); // Shorter wait, content is already loaded locally
+      
+      // Optimized: Vue component renders quickly, no network request needed
+      // Tested: 0.2s is sufficient for DOM to fully render after route change
+      await page.wait(0.2);
       
       // Debug: Check what we found (only in verbose mode)
       let debugInfo;
@@ -134,7 +137,8 @@ cli({
       
       // Navigate back to main shelf using browser history (preserves lazy-loaded state)
       await page.evaluate('window.history.back()');
-      await page.wait(2); // Wait for navigation to complete
+      // 0.5s allows browser back animation to complete before next operation
+      await page.wait(0.5);
       
       return books;
     };
