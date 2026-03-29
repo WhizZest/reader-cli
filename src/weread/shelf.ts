@@ -190,7 +190,7 @@ cli({
         // Click archive to navigate to its page
         if (verbose) console.log(`Clicking archive: ${element.title}`);
         
-        // Click the archive element by matching title
+        // Click the archive element by matching title (use same logic as extraction)
         const clicked = await page.evaluate(String.raw`
           (() => {
             const archives = document.querySelectorAll('a.shelfArchive');
@@ -198,7 +198,8 @@ cli({
             
             for (const archive of archives) {
               const titleEl = archive.querySelector('.title');
-              const title = titleEl?.textContent?.trim() || '';
+              // Use same priority as extraction: title attribute first, then textContent
+              const title = titleEl?.getAttribute('title') || titleEl?.textContent?.trim() || '';
               if (title === targetTitle) {
                 archive.click();
                 return true;
