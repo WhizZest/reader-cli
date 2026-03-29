@@ -31,8 +31,36 @@ npm link
 ### List Books on Your Shelf
 
 ```bash
+# List first 20 books
 node dist/main.js shelf --limit 20
+
+# Include debug output
+node dist/main.js shelf --limit 20 --verbose
 ```
+
+**Output example:**
+```json
+[
+  {
+    "index": 1,
+    "title": "Book Title",
+    "bookId": "abc123",
+    "archive": null
+  },
+  {
+    "index": 2,
+    "title": "Another Book",
+    "bookId": "def456",
+    "archive": "My Collection"
+  }
+]
+```
+
+**Fields:**
+- `index` - Book sequence number (1, 2, 3...)
+- `title` - Book title
+- `bookId` - Unique book identifier
+- `archive` - Group/archive name (null for books not in any group)
 
 ### Get Book Details
 
@@ -62,11 +90,24 @@ Reader CLI requires a browser extension to manage cookies for automated login.
 ## Commands
 
 | Command | Description | Example |
-|---------|-------------|---------|
+|---------|-------------|----------|
 | `shelf` | List books on your shelf | `shelf --limit 50` |
 | `book` | Get book details | `book <id>` |
 | `search` | Search for books | `search "keyword"` |
 | `catalog` | Extract table of contents | `catalog <book-id>` |
+
+### Shelf Command Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--limit` | int | 20 | Maximum number of books to retrieve |
+| `--verbose` | boolean | false | Show debug information (scrolling, group expansion, etc.) |
+
+**Features:**
+- Automatically expands book groups/archives and extracts books within
+- Preserves original bookshelf order
+- Supports lazy loading for large bookshelves
+- Returns flat list with `archive` field indicating group membership
 
 ## Development
 
@@ -86,6 +127,8 @@ npm run build
 - This tool is for educational purposes only
 - Please respect the terms of service of reading platforms
 - Do not use for commercial purposes
+- **Keep the browser window visible during execution** - Lazy loading requires the window to be rendered (minimizing may cause issues)
+- Book groups/archives will be automatically expanded, adding ~3 seconds per group
 
 ## License
 
