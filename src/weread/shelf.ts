@@ -73,9 +73,70 @@ cli({
     const extractArchiveBooks = async (archiveName: string): Promise<ShelfBook[]> => {
       if (verbose) console.log(`  Extracting books from archive: ${archiveName}`);
       
-      // Optimized: Vue component renders quickly, no network request needed
-      // Tested: 0.2s is sufficient for DOM to fully render after route change
-      await page.wait(0.2);
+      // Deterministic wait: Wait for Vue Router navigation to complete
+      // Implementation follows Qodo AI review suggestion
+      const beforeUrl = await page.evaluate('() => window.location.href');
+      
+      // Click archive and wait for URL change (indicates route navigation completed)
+      const clicked = await page.evaluate(String.raw`
+        (() => {
+          const archives = document.querySelectorAll('a.shelfArchive');
+          const targetTitle = ${JSON.stringify(archiveName)};
+          
+          for (const archive of archives) {
+            const titleEl = archive.querySelector('.title');
+            const title = titleEl?.getAttribute('title') || titleEl?.textContent?.trim() || '';
+            if (title === targetTitle) {
+              archive.click();
+              return true;
+            }
+          }
+          return false;
+        })()
+      `);
+      
+      if (!clicked && verbose) {
+        console.warn(`  Could not find archive: ${archiveName}`);
+      }
+      
+      // Poll until URL changes or timeout (max 5s)
+      const urlChanged = await page.evaluate(String.raw`
+        (() => {
+          return new Promise((resolve) => {
+            const timeout = 5000;  // Max wait: 5 seconds
+            const interval = 100;  // Check every 100ms
+            const startTime = Date.now();
+            const beforeUrl = ${JSON.stringify(beforeUrl)};
+            
+            const check = () => {
+              if (window.location.href !== beforeUrl) {
+                resolve(true);
+                return;
+              }
+              
+              if (Date.now() - startTime >= timeout) {
+                resolve(false);  // Timeout
+                return;
+              }
+              
+              setTimeout(check, interval);
+            };
+            
+            check();
+          });
+        })()
+      `);
+      
+      if (verbose) {
+        if (urlChanged) {
+          console.log('  ✓ Navigation detected');
+        } else {
+          console.warn('  ⚠ Navigation timeout (5s), proceeding anyway...');
+        }
+      }
+      
+      // Brief additional wait for DOM stability after navigation
+      await page.wait(0.1);
       
       // Debug: Check what we found (only in verbose mode)
       let debugInfo;
@@ -194,33 +255,7 @@ cli({
           archive: null
         });
       } else if (element.type === 'archive') {
-        // Click archive to navigate to its page
-        if (verbose) console.log(`Clicking archive: ${element.title}`);
-        
-        // Click the archive element by matching title (use same logic as extraction)
-        const clicked = await page.evaluate(String.raw`
-          (() => {
-            const archives = document.querySelectorAll('a.shelfArchive');
-            const targetTitle = ${JSON.stringify(element.title)};
-            
-            for (const archive of archives) {
-              const titleEl = archive.querySelector('.title');
-              // Use same priority as extraction: title attribute first, then textContent
-              const title = titleEl?.getAttribute('title') || titleEl?.textContent?.trim() || '';
-              if (title === targetTitle) {
-                archive.click();
-                return true;
-              }
-            }
-            return false;
-          })()
-        `);
-        
-        if (!clicked) {
-          if (verbose) console.warn(`  Could not find archive with title: ${element.title}`);
-          continue;
-        }
-        
+        // extractArchiveBooks now handles clicking and navigation internally
         const archiveBooks = await extractArchiveBooks(element.title);
         if (verbose) console.log(`  Found ${archiveBooks.length} books in archive`);
         
