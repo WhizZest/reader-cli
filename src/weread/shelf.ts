@@ -144,6 +144,9 @@ cli({
     if (verbose) console.log(`Initial screen: ${elements.length} elements`);
     
     // Lazy load more if needed (based on element count, not book count)
+    // This is safe because: archives are guaranteed to contain ≥1 books
+    // (WeRead automatically removes empty archives from the UI), so counting
+    // elements (books + archives) provides a reliable lower bound for scrolling.
     if (limit > elements.length) {
       const maxScrolls = Math.ceil((limit - elements.length) / 20);
       let previousCount = elements.length;
