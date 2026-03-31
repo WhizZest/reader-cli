@@ -12,7 +12,7 @@ cli({
     { name: 'limit', type: 'int', default: '0', help: 'Max chapters to show (0=all)' },
     { name: 'search', type: 'string', help: 'Filter chapters by keyword' },
   ],
-  columns: ['index', 'title'],
+  columns: ['index', 'level', 'title'],
   func: async (page: IPage, args: any) => {
     const bookId = args['book-id'];
     const limit = Number(args.limit);
@@ -22,82 +22,47 @@ cli({
     await page.goto(`https://weread.qq.com/web/reader/${bookId}`, { waitUntil: 'load' });
     await page.wait(5); // Wait for content to load
 
-    // Click catalog button and extract chapters
-    const clicked = await page.evaluate(`(() => {
-      // Find and click the catalog button (has class "catalog")
-      const catalogBtn = document.querySelector('.catalog');
-      if (catalogBtn) {
-        catalogBtn.click();
-        return true;
-      }
-      return false;
+    // Extract chapter information from __INITIAL_STATE__
+    const chapters = await page.evaluate(`(() => {
+      return fetch(window.location.href)
+        .then(r => r.text())
+        .then(html => {
+          // Match window.__INITIAL_STATE__ = {...};
+          const match = html.match(/window\\.__INITIAL_STATE__\\s*=\\s*({.+?});/s);
+          if (!match) {
+            console.error('Could not find __INITIAL_STATE__');
+            return [];
+          }
+          
+          try {
+            const initialState = JSON.parse(match[1]);
+            const chapterInfos = initialState?.reader?.chapterInfos || [];
+            
+            // Transform to our format
+            return chapterInfos.map((info) => ({
+              title: info.title,
+              level: info.level || 1,
+              chapterUid: info.chapterUid,
+              chapterIdx: info.chapterIdx,
+              wordCount: info.wordCount || 0
+            }));
+          } catch (e) {
+            console.error('Failed to parse __INITIAL_STATE__:', e);
+            return [];
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch page:', err);
+          return [];
+        });
     })()`);
 
-    if (!clicked) {
-      throw new Error('Could not find catalog button. The book may not have a table of contents.');
+    if (chapters.length === 0) {
+      throw new Error('Could not extract table of contents. This book may not have one, or the page structure has changed.');
     }
 
-    await page.wait(3); // Wait for sidebar to expand
-
-    // Extract chapter list
-    const chapters = await page.evaluate(`(() => {
-      const allChapters = [];
-      
-      // Find the catalog sidebar container
-      const catalogContainer = document.querySelector('[class*="Catalog"]') || 
-                               document.querySelector('[class*="catalog"]') ||
-                               document.querySelector('[class*="menu"]');
-      
-      if (!catalogContainer) {
-        return allChapters;
-      }
-      
-      // Look for chapter elements with various selectors
-      const items = catalogContainer.querySelectorAll('[role="button"], div[class*="item"], .chapterItem, .wr_catalog_item, [class*="section"]');
-      
-      items.forEach(item => {
-        const title = item.textContent.trim();
-        
-        // Filter out noise: reading progress, empty text, too long text
-        if (!title || 
-            title.length < 3 || 
-            title.length > 300 ||
-            title.includes('当前读到') ||
-            title.includes('+书签') ||
-            title.includes('close')) {
-          return;
-        }
-        
-        // Determine hierarchy level based on indentation or styling
-        let level = 1;
-        const className = item.className || '';
-        const paddingLeft = parseFloat(item.style?.paddingLeft || '0');
-        
-        // Check for visual indicators of sub-levels
-        if (className.includes('sub') || 
-            className.includes('level2') || 
-            className.includes('secondary') ||
-            item.getAttribute('aria-level') === '2' ||
-            paddingLeft > 20) {  // Indented items are usually sub-levels
-          level = 2;
-        } else if (className.includes('level3') || 
-                   item.getAttribute('aria-level') === '3' ||
-                   paddingLeft > 40) {
-          level = 3;
-        }
-        
-        allChapters.push({
-          title,
-          level,
-          paddingLeft
-        });
-      });
-      
-      return allChapters;
-    })()`);
-
     // Remove duplicates and clean up
-    const uniqueChapters: Array<{ index: number; title: string }> = [];
+    const uniqueChapters: Array<{ index: number; title: string; level?: number }> = [];
     const seen = new Set<string>();
     
     for (const chapter of chapters) {
@@ -108,6 +73,7 @@ cli({
         uniqueChapters.push({
           index: uniqueChapters.length + 1,
           title: normalizedTitle,
+          level: chapter.level || 1,  // Include level information
         });
       }
     }
