@@ -22,58 +22,97 @@ cli({
     await page.goto(`https://weread.qq.com/web/reader/${bookId}`, { waitUntil: 'load' });
     await page.wait(5); // Wait for content to load
 
-    // Extract chapter information from __INITIAL_STATE__
+    // Extract chapter information from __INITIAL_STATE__ using robust parsing
     const chapters = await page.evaluate(`(() => {
-      return fetch(window.location.href)
-        .then(r => r.text())
-        .then(html => {
-          // Match window.__INITIAL_STATE__ = {...};
-          const match = html.match(/window\\.__INITIAL_STATE__\\s*=\\s*({.+?});/s);
-          if (!match) {
-            console.error('Could not find __INITIAL_STATE__');
-            return [];
-          }
-          
-          try {
-            const initialState = JSON.parse(match[1]);
-            const chapterInfos = initialState?.reader?.chapterInfos || [];
-            
-            // Transform to our format
-            return chapterInfos.map((info) => ({
-              title: info.title,
-              level: info.level || 1,
-              chapterUid: info.chapterUid,
-              chapterIdx: info.chapterIdx,
-              wordCount: info.wordCount || 0
-            }));
-          } catch (e) {
-            console.error('Failed to parse __INITIAL_STATE__:', e);
-            return [];
-          }
-        })
-        .catch(err => {
-          console.error('Failed to fetch page:', err);
-          return [];
-        });
+      async function getChapterInfos() {
+        const url = window.location.href;
+        const response = await fetch(url);
+        const html = await response.text();
+
+        // Find window.__INITIAL_STATE__ = marker
+        const markerRegex = /window\.__INITIAL_STATE__\s*=/;
+        const match = markerRegex.exec(html);
+        if (!match) {
+          throw new Error('未找到 __INITIAL_STATE__ 定义');
+        }
+        const markerEnd = match.index + match[0].length; // Position after '='
+
+        // Find first '{'
+        let braceStart = html.indexOf('{', markerEnd);
+        if (braceStart === -1) {
+          throw new Error('未找到 JSON 起始大括号');
+        }
+
+        // Count braces to find matching end
+        let braceCount = 0;
+        let i = braceStart;
+        for (; i < html.length; i++) {
+          const ch = html[i];
+          if (ch === '{') braceCount++;
+          if (ch === '}') braceCount--;
+          if (braceCount === 0) break;
+        }
+        if (braceCount !== 0) {
+          throw new Error('JSON 大括号未闭合');
+        }
+
+        const jsonStr = html.substring(braceStart, i + 1);
+        const initialState = JSON.parse(jsonStr);
+        const chapterInfos = initialState?.reader?.chapterInfos || [];
+        
+        if (!chapterInfos) {
+          throw new Error('未找到章节信息');
+        }
+        
+        return chapterInfos.map((info) => ({
+          title: info.title || 'Unknown Chapter',
+          level: info.level || 1,
+          chapterUid: info.chapterUid,
+          chapterIdx: info.chapterIdx,
+          wordCount: info.wordCount || 0
+        }));
+      }
+      
+      return getChapterInfos().catch(err => {
+        console.error('Failed to extract chapter info:', err.message);
+        return [];
+      });
     })()`);
 
     if (chapters.length === 0) {
       throw new Error('Could not extract table of contents. This book may not have one, or the page structure has changed.');
     }
 
-    // Remove duplicates and clean up
+    // Remove duplicates using stable identifiers (chapterUid/chapterIdx) instead of title
     const uniqueChapters: Array<{ index: number; title: string; level?: number }> = [];
-    const seen = new Set<string>();
+    const seen = new Set<string | number>();
     
     for (const chapter of chapters) {
+      // Validate chapter data - skip entries with missing or invalid title
+      if (!chapter.title || typeof chapter.title !== 'string') {
+        console.warn(`Skipping chapter with invalid title:`, chapter);
+        continue;
+      }
+      
       const normalizedTitle = chapter.title.replace(/\s+/g, ' ').trim();
       
-      if (!seen.has(normalizedTitle)) {
-        seen.add(normalizedTitle);
+      // Use chapterUid as primary key, fallback to chapterIdx, then title only if neither exists
+      let uniqueKey: string | number;
+      if (chapter.chapterUid) {
+        uniqueKey = chapter.chapterUid;
+      } else if (chapter.chapterIdx !== undefined) {
+        uniqueKey = chapter.chapterIdx;
+      } else {
+        // Only use title as last resort
+        uniqueKey = normalizedTitle;
+      }
+      
+      if (!seen.has(uniqueKey)) {
+        seen.add(uniqueKey);
         uniqueChapters.push({
           index: uniqueChapters.length + 1,
           title: normalizedTitle,
-          level: chapter.level || 1,  // Include level information
+          level: chapter.level || 1,
         });
       }
     }
