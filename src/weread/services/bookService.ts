@@ -1,5 +1,5 @@
 import type { IPage } from '../../types.js';
-import type { ChapterInfo } from '../types/weread.js';
+import type { ChapterInfo, OutlineResponse, ChapterOutline } from '../types/weread.js';
 
 /**
  * Shared service for WeRead book operations
@@ -115,5 +115,50 @@ export class BookService {
     }
     
     return numericBookId;
+  }
+
+  /**
+   * Fetch outline for specific chapters
+   * @param numericBookId - Numeric book ID from localStorage
+   * @param chapterUids - Chapter UIDs to fetch outlines for (empty array = all)
+   */
+  async fetchOutline(numericBookId: string, chapterUids: number[] = []): Promise<ChapterOutline[]> {
+    const response = await this.page.evaluate(`(() => {
+      return fetch('https://weread.qq.com/web/book/outline', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json;charset=UTF-8'
+        },
+        body: JSON.stringify({
+          bookId: '${numericBookId}',
+          chapterUids: ${JSON.stringify(chapterUids).replace(/'/g, "'")}
+        })
+      }).then(res => {
+        if (!res.ok) {
+          throw new Error('Outline API failed with status ' + res.status);
+        }
+        return res.json();
+      });
+    })()`);
+    
+    const outlineResponse = response as OutlineResponse;
+    
+    // Filter out chapters without outlines and transform data format
+    const outlines: ChapterOutline[] = [];
+    
+    for (const item of outlineResponse.itemsArray || []) {
+      if (item.items && item.items.length > 0) {
+        outlines.push({
+          chapterUid: item.chapterUid,
+          title: '', // Will be filled by outline command using catalog data
+          items: item.items.map(outlineItem => ({
+            text: outlineItem.text,
+            level: outlineItem.level
+          }))
+        });
+      }
+    }
+    
+    return outlines;
   }
 }
