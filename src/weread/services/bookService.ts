@@ -84,4 +84,36 @@ export class BookService {
     
     return chapters;
   }
+
+  /**
+   * Extract numeric bookId from localStorage
+   * Format: AIChat:Chat_bookid_${numericBookId}
+   */
+  async getNumericBookId(hexBookId: string): Promise<string> {
+    const numericBookId = await this.page.evaluate(`(() => {
+      // Find all AIChat:Chat_bookid_ keys in localStorage
+      const aiChatKeys = Object.keys(localStorage).filter(k => 
+        k.startsWith('AIChat:Chat_bookid_')
+      );
+      
+      if (aiChatKeys.length === 0) {
+        throw new Error('No numeric bookId found in localStorage');
+      }
+      
+      // Extract numeric bookId from the first key
+      // Format: AIChat:Chat_bookid_3300198165
+      const match = aiChatKeys[0].match(/AIChat:Chat_bookid_(\\d+)/);
+      if (!match || !match[1]) {
+        throw new Error('Failed to extract numeric bookId from localStorage key');
+      }
+      
+      return match[1];
+    })()`);
+    
+    if (!numericBookId) {
+      throw new Error(`Could not find numeric bookId for hex bookId: ${hexBookId}`);
+    }
+    
+    return numericBookId;
+  }
 }
