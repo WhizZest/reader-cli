@@ -95,6 +95,26 @@ Reader CLI requires a browser extension to manage cookies for automated login.
 | `book` | Get book details | `book <id>` |
 | `search` | Search for books | `search "keyword"` |
 | `catalog` | Extract table of contents | `catalog <book-id>` |
+| `outline` | Extract AI-generated outline | `outline <book-id>` |
+
+**Outline Command Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `--chapter` | int | - | Extract outline for specific chapter only |
+| `--output` | string | - | Export outlines to a Markdown file (e.g., `--output outline.md`) |
+
+**Examples:**
+```bash
+# Get all outlines (JSON format)
+node dist/main.js outline 2d2325a0813abb3e8g015d29
+
+# Get specific chapter outline
+node dist/main.js outline 2d2325a0813abb3e8g015d29 --chapter 45
+
+# Export to Markdown file
+node dist/main.js outline 2d2325a0813abb3e8g015d29 --output outline.md
+```
 
 ### Shelf Command Options
 

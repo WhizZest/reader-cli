@@ -30,6 +30,7 @@ await import('./weread/notes.js');
 await import('./weread/highlights.js');
 await import('./weread/notebooks.js');
 await import('./weread/catalog.js');
+await import('./weread/outline.js');
 
 // Register all commands from registry to commander
 const registry = getRegistry();
