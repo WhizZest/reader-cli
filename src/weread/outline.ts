@@ -14,7 +14,7 @@ cli({
     { name: 'chapter', type: 'int', help: 'Specific chapter UID to extract outline for' },
     { name: 'output', type: 'string', help: 'Export outlines to a Markdown file' },
   ],
-  columns: ['chapterUid', 'title', 'items'],
+  // Columns will be set dynamically based on return value
   func: async (page: IPage, args: any) => {
     const bookId = args['book-id'];
     const targetChapterUid = args.chapter;
@@ -37,9 +37,13 @@ cli({
     let chapterUids: number[];
     if (targetChapterUid) {
       // Fetch outline for specific chapter only
-      chapterUids = [Number(targetChapterUid)];
+      const uid = Number(targetChapterUid);
+      if (!isFinite(uid)) {
+        throw new Error(`Invalid chapter UID: ${targetChapterUid}`);
+      }
+      chapterUids = [uid];
     } else {
-      // Fetch outlines for all chapters
+      // Fetch outlines for all chapters (already filtered by bookService)
       chapterUids = chapters.map(c => c.chapterUid);
     }
     
@@ -61,8 +65,9 @@ cli({
     if (outputFile) {
       const markdownContent = formatToMarkdown(outlines);
       fs.writeFileSync(outputFile, markdownContent, 'utf-8');
-      console.log(`Markdown outline exported to: ${outputFile}`);
-      return { message: `Exported ${outlines.length} chapters to ${outputFile}`, count: outlines.length };
+      console.log(`✓ Exported ${outlines.length} chapters to ${outputFile}`);
+      // Return success info with different columns
+      return { success: true, file: outputFile, chapters: outlines.length };
     }
     
     return outlines;

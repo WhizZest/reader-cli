@@ -39,6 +39,12 @@ cli({
         continue;
       }
       
+      // Validate chapterUid - must be a valid number
+      if (typeof chapter.chapterUid !== 'number' || !isFinite(chapter.chapterUid)) {
+        console.warn(`Skipping chapter with invalid chapterUid:`, chapter);
+        continue;
+      }
+      
       const normalizedTitle = chapter.title.replace(/\s+/g, ' ').trim();
       
       // Use chapterUid as primary key
